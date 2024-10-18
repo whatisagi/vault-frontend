@@ -190,10 +190,15 @@ export function OnboardingForm() {
                         `https://fe-hometask-api.dev.vault.tryvault.com/corporation-number/${value}`
                       );
                       if (!response.ok) {
-                        form.setError("corporationNumber", {
-                          type: "value",
-                          message: "Invalid Corporation Number",
-                        });
+                        const { valid, message } = await response.json();
+                        if (!valid) {
+                          form.setError("corporationNumber", {
+                            type: "value",
+                            message: message,
+                          });
+                        }
+                      } else {
+                        form.clearErrors("corporationNumber");
                       }
                     }}
                   />
