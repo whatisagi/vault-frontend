@@ -101,6 +101,7 @@ export function OnboardingForm() {
         }
       }
     } catch (error) {
+      console.error(error);
       toast("Error submitting form", {
         description: "Unknown error",
       });
