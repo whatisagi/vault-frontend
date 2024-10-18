@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Toaster } from "./ui/toast";
 import { toast } from "sonner";
+import { useCallback } from "react";
 
 const FormSchema = z.object({
   firstName: z
@@ -60,53 +61,56 @@ export function OnboardingForm() {
     mode: "onBlur",
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    try {
-      const response = await fetch(
-        "https://fe-hometask-api.dev.vault.tryvault.com/profile-details",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
-
-      if (response.ok || response.status === 200) {
-        toast(
-          "The form has been submitted successfully, with the following data",
+  const onSubmit = useCallback(
+    async (data: z.infer<typeof FormSchema>) => {
+      try {
+        const response = await fetch(
+          "https://fe-hometask-api.dev.vault.tryvault.com/profile-details",
           {
-            description: (
-              <pre className="mt-2 rounded-md p-4">
-                <code>{JSON.stringify(data, null, 2)}</code>
-              </pre>
-            ),
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
           }
         );
-        form.reset();
-      } else {
-        const { message } = await response.json();
-        if (message === "Invalid first name") {
-          form.setError("firstName", { type: "value", message: message });
-        } else if (message === "Invalid last name") {
-          form.setError("lastName", { type: "value", message: message });
-        } else if (message === "Invalid phone number") {
-          form.setError("phone", { type: "value", message: message });
-        } else if (message === "Invalid corporation number") {
-          form.setError("corporationNumber", {
-            type: "value",
-            message: message,
-          });
+
+        if (response.ok || response.status === 200) {
+          toast(
+            "The form has been submitted successfully, with the following data",
+            {
+              description: (
+                <pre className="mt-2 rounded-md p-4">
+                  <code>{JSON.stringify(data, null, 2)}</code>
+                </pre>
+              ),
+            }
+          );
+          form.reset();
+        } else {
+          const { message } = await response.json();
+          if (message === "Invalid first name") {
+            form.setError("firstName", { type: "value", message: message });
+          } else if (message === "Invalid last name") {
+            form.setError("lastName", { type: "value", message: message });
+          } else if (message === "Invalid phone number") {
+            form.setError("phone", { type: "value", message: message });
+          } else if (message === "Invalid corporation number") {
+            form.setError("corporationNumber", {
+              type: "value",
+              message: message,
+            });
+          }
         }
+      } catch (error) {
+        console.error(error);
+        toast("Error submitting form", {
+          description: "Unknown error",
+        });
       }
-    } catch (error) {
-      console.error(error);
-      toast("Error submitting form", {
-        description: "Unknown error",
-      });
-    }
-  }
+    },
+    [form]
+  );
 
   return (
     <Form {...form}>
@@ -168,9 +172,13 @@ export function OnboardingForm() {
                   <Input
                     placeholder=""
                     {...field}
+                    // We handle onBlur here to avoid making get
+                    // requests when other fields are editted
                     onBlur={async () => {
                       const value = field.value;
                       const regex = /^\d{9}$/;
+                      // We don't want to make get request when
+                      // the input is not yet 9 digits
                       if (!regex.test(value)) {
                         form.setError("corporationNumber", {
                           type: "value",
@@ -178,7 +186,6 @@ export function OnboardingForm() {
                         });
                         return;
                       }
-
                       const response = await fetch(
                         `https://fe-hometask-api.dev.vault.tryvault.com/corporation-number/${value}`
                       );
@@ -196,7 +203,7 @@ export function OnboardingForm() {
             )}
           />
           <Button className="w-full" type="submit">
-            Submit →
+            Submit
           </Button>
         </div>
       </form>
