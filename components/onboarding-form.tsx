@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,9 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Toaster } from "./ui/toast";
 import { toast } from "sonner";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 const FormSchema = z.object({
   firstName: z
@@ -60,9 +60,13 @@ export function OnboardingForm() {
     // This is so that form field is validated onBlur, before being submitted
     mode: "onBlur",
   });
+  const [validatingCorporationNumber, setValidatingCorporationNumber] =
+    useState(false);
+  const [validatingForm, setValidatingForm] = useState(false);
 
   const onSubmit = useCallback(
     async (data: z.infer<typeof FormSchema>) => {
+      setValidatingForm(true);
       try {
         const response = await fetch(
           "https://fe-hometask-api.dev.vault.tryvault.com/profile-details",
@@ -107,6 +111,8 @@ export function OnboardingForm() {
         toast("Error submitting form", {
           description: "Unknown error",
         });
+      } finally {
+        setValidatingForm(false);
       }
     },
     [form]
@@ -118,14 +124,46 @@ export function OnboardingForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="mx-auto w-full max-w-[500px] border rounded-md p-10"
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <fieldset disabled={validatingForm}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">
+                      First Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground">Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-500" />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="firstName"
+              name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">First Name</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Phone Number
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} />
                   </FormControl>
@@ -135,84 +173,77 @@ export function OnboardingForm() {
             />
             <FormField
               control={form.control}
-              name="lastName"
+              name="corporationNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Last Name</FormLabel>
+                  <FormLabel className="text-foreground inline-flex items-center gap-2">
+                    Corporation Number
+                    {validatingCorporationNumber && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="" {...field} />
-                  </FormControl>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-foreground">Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="" {...field} />
-                </FormControl>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="corporationNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-foreground">
-                  Corporation Number
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder=""
-                    {...field}
-                    // We handle onBlur here to avoid making get
-                    // requests when other fields are editted
-                    onBlur={async () => {
-                      const value = field.value;
-                      const regex = /^\d{9}$/;
-                      // We don't want to make get request when
-                      // the input is not yet 9 digits
-                      if (!regex.test(value)) {
-                        form.setError("corporationNumber", {
-                          type: "value",
-                          message: "Must be 9 digits",
-                        });
-                        return;
-                      }
-                      const response = await fetch(
-                        `https://fe-hometask-api.dev.vault.tryvault.com/corporation-number/${value}`
-                      );
-                      if (!response.ok) {
-                        const { valid, message } = await response.json();
-                        if (!valid) {
+                    <Input
+                      disabled={validatingCorporationNumber}
+                      placeholder=""
+                      {...field}
+                      // We handle onBlur here to avoid making get
+                      // requests when other fields are editted
+                      onBlur={async () => {
+                        const value = field.value.trim();
+                        const regex = /^\d{9}$/;
+                        // We don't want to make get request when
+                        // the input is not yet 9 digits
+                        if (!regex.test(value)) {
                           form.setError("corporationNumber", {
                             type: "value",
-                            message: message,
+                            message: "Must be 9 digits",
                           });
+                          return;
                         }
-                      } else {
-                        form.clearErrors("corporationNumber");
-                      }
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
-          <Button className="w-full" type="submit">
-            Submit
-          </Button>
-        </div>
+                        setValidatingCorporationNumber(true);
+                        try {
+                          const response = await fetch(
+                            `https://fe-hometask-api.dev.vault.tryvault.com/corporation-number/${value}`
+                          );
+                          if (!response.ok) {
+                            const { valid, message } = await response.json();
+                            if (!valid) {
+                              form.setError("corporationNumber", {
+                                type: "value",
+                                message: message,
+                              });
+                            } else {
+                              form.clearErrors("corporationNumber");
+                            }
+                          } else {
+                            form.clearErrors("corporationNumber");
+                          }
+                        } catch (error) {
+                          form.setError("corporationNumber", {
+                            type: "value",
+                            message:
+                              "Failed to validate corporation number. Please try again.",
+                          });
+                        } finally {
+                          setValidatingCorporationNumber(false);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+            <Button className="w-full" type="submit">
+              Submit
+              {validatingForm && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+            </Button>
+          </div>
+        </fieldset>
       </form>
-      <Toaster />
     </Form>
   );
 }
