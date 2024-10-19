@@ -50,3 +50,10 @@ npm run test
   is indicated:
 
 ![v3](shots/v3.png)
+
+## Note
+
+We're not writing the test cases for invalid first name and invalid last name from the
+backend. This is because the backend seems to always accepted any first and last names
+as long as they're not empty (which we check in the frontend). However, we still do handle
+these error cases.
