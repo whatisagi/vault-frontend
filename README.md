@@ -45,3 +45,8 @@ npm run test
 - When the form is validated successfully: the form is cleared, a toast is shown:
 
 ![v2](shots/v2.png)
+
+- If there is a problem with validation from the backend, the respective field
+  is indicated:
+
+![v3](shots/v3.png)
