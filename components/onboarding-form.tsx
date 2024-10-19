@@ -220,6 +220,7 @@ export function OnboardingForm() {
                             form.clearErrors("corporationNumber");
                           }
                         } catch (error) {
+                          console.error(error);
                           form.setError("corporationNumber", {
                             type: "value",
                             message:
