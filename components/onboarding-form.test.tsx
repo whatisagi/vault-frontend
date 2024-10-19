@@ -23,7 +23,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
   });
 
-  it("submits the form with valid data", async () => {
+  it("submits the form data if all fields are entered validly", async () => {
     mockedFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -39,7 +39,7 @@ describe("OnboardingForm", () => {
       target: { value: "Last" },
     });
     fireEvent.input(screen.getByLabelText(/phone number/i), {
-      target: { value: "+12345678901" },
+      target: { value: "+13063928173" },
     });
     fireEvent.input(screen.getByLabelText(/corporation number/i), {
       target: { value: "123456789" },
@@ -55,7 +55,7 @@ describe("OnboardingForm", () => {
           body: JSON.stringify({
             firstName: "First",
             lastName: "Last",
-            phone: "+12345678901",
+            phone: "+13063928173",
             corporationNumber: "123456789",
           }),
         })
@@ -69,7 +69,7 @@ describe("OnboardingForm", () => {
     expect(responseText).toBe("OK");
   });
 
-  it("validates form input and prevents submission with invalid data", async () => {
+  it("does not submit the form if there are not input data", async () => {
     render(<OnboardingForm />);
 
     fireEvent.click(screen.getByRole("button", { name: /submit/i }));
@@ -154,7 +154,7 @@ describe("OnboardingForm", () => {
       target: { value: "+12345678901" },
     });
     fireEvent.input(screen.getByLabelText(/corporation number/i), {
-      target: { value: "123456789" },
+      target: { value: "123456788" },
     });
 
     fireEvent.blur(screen.getByLabelText(/corporation number/i));
@@ -208,7 +208,7 @@ describe("OnboardingForm", () => {
     });
   });
 
-  it("displays an error message when the phone number is invalid", async () => {
+  it("displays an error message when the phone number is invalidated by the backend", async () => {
     mockedFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
@@ -246,7 +246,7 @@ describe("OnboardingForm", () => {
     expect(json.message).toBe("Invalid phone number");
   });
 
-  it("displays an error message when the corporation number is invalid", async () => {
+  it("displays an error message when the corporation number is invalidated by backend", async () => {
     mockedFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
@@ -264,7 +264,7 @@ describe("OnboardingForm", () => {
       target: { value: "Last" },
     });
     fireEvent.input(screen.getByLabelText(/phone number/i), {
-      target: { value: "+12345678901" },
+      target: { value: "+13061716382" },
     });
     fireEvent.input(screen.getByLabelText(/corporation number/i), {
       target: { value: "123456788" },
