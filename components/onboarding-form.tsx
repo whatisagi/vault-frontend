@@ -124,6 +124,7 @@ export function OnboardingForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="mx-auto w-full max-w-[500px] border rounded-md p-10"
       >
+        <h1 className="text-center text-xl mb-4"> Onboarding Form </h1>
         <fieldset disabled={validatingForm}>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
